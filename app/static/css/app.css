@@ -8,14 +8,19 @@ body {
     height: 30px;
 }
 
-.container-center{
+.landing-container{
     text-align: center;
-    margin-top: 15%;
-    margin-bottom: 15%;
+    margin: 15% 0%;
 }
 
-.container-child{
-    margin: auto;
+.landing-container-child{
+    float: left;
+    width: 100%;
+}
+
+
+.float-clear{
+    clear: both;
 }
 
 #landing-img{
