@@ -43,7 +43,7 @@ Vue.component('app-footer', {
     template: `
     <footer>
         <div class="container">
-            <p>Copyright &copy; Flask Inc.</p>
+            
         </div>
     </footer>
     `
@@ -52,7 +52,7 @@ Vue.component('app-footer', {
 const Home = Vue.component('home', {
    template: `
     <div class="row landing-container">
-        <div class="col-md-4 landing-container-child" style="margin-left: 15%;">
+        <div class="col-md-4 landing-container-child" style="margin-left: 11%;">
             <img src="/static/images/landing.jpg" id="landing-img"/>
         </div>
         <div class="col-md-4  landing-container-child float-clear">
@@ -76,14 +76,41 @@ const Home = Vue.component('home', {
 });
 
 
+const Login = Vue.component('login', {
+    template:`
+      <div>
+        <form id="login-form">
+            <div class="card-header center">
+                Login
+            </div>
+            <div class="card center">
+              <div class="card-body login">
+                <div>
+                  <label for='usrname'>Username</label><br>
+                  <input type='text' id='usrname' name='username' style="width: 100%;"/>
+                </div>
+                <div>
+                  <label for='passwd'>Password</label><br>
+                  <input type='password' id='passwd' name='password' style="width: 100%;"/>
+                </div>
+                <div>
+                  <button class="btn btn-success">Login</button> 
+                </div>
+              </div>
+            </div>
+        </form>
+        <link rel='stlesheet' href="static/css/login.css"/>
+      </div>
+    `
+});
+
 // Define Routes
 const router = new VueRouter({
     routes: [
         { path: "/", component: Home },
-        { path: "/register", component: Register},
-        { path: "/login",},
-        {path: "/logout",},
-        {path: "explore"},
+        // { path: "/register", component: Register},
+        { path: "/login", component: Login},
+        // {path: "explore", componenet: Explore}
         
     ]
 });

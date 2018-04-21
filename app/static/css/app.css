@@ -1,6 +1,11 @@
+/*main styling*/
 body {
     padding-top: 5rem;
     background-color: #f5efe6;
+}
+
+.center{
+    margin: 0 auto;
 }
 
 .small-logo{
@@ -28,4 +33,38 @@ body {
     border-radius: 5px;
     width: 100%;
     height: 100%;
+}
+
+
+/*login styling*/
+.login{
+    box-shadow: 0.5px 0.5px 10px grey;
+    border-radius: 2px;
+    padding: 24px
+}
+
+.card-body div{
+    margin-top:5%;
+}
+
+.card-body div > button{
+    width: 100%;
+    height: 80%;
+    margin-top: 13%;
+}
+
+.card-body div > label{
+    font-weight:600;
+}
+
+.card{
+    width: 20rem;
+    height: 18rem;
+}
+
+.card-header{
+    width: 18rem;
+    border: none;
+    background: transparent;
+    padding-left:0;
 }
