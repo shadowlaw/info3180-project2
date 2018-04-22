@@ -23,7 +23,7 @@ Vue.component('app-header', {
             <li class="nav-item active">
               <router-link class="nav-link" to="#">My Profile</router-link>
             </li>
-            <li v-if="token" class="nav-item active">
+            <li v-if="auth" class="nav-item active">
               <router-link class="nav-link" to="/logout">Logout</router-link>
             </li>
             <li v-else class="nav-item">
@@ -34,7 +34,7 @@ Vue.component('app-header', {
     `,
     data: function(){
         return {
-            token: localStorage.token
+            auth: localStorage.hasOwnProperty("token")
         }
     }
 });
@@ -43,7 +43,7 @@ Vue.component('app-footer', {
     template: `
     <footer>
         <div class="container">
-            <p>Copyright &copy; Flask Inc.</p>
+            
         </div>
     </footer>
     `
@@ -52,7 +52,7 @@ Vue.component('app-footer', {
 const Home = Vue.component('home', {
    template: `
     <div class="row landing-container">
-        <div class="col-md-4 landing-container-child" style="margin-left: 15%;">
+        <div class="col-md-4 landing-container-child" style="margin-left: 11%;">
             <img src="/static/images/landing.jpg" id="landing-img"/>
         </div>
         <div class="col-md-4  landing-container-child float-clear">
@@ -62,8 +62,8 @@ const Home = Vue.component('home', {
               <hr>
               <p class="card-text">Share photos of your favourite moments with friends, family and the world.</p>
               <div style="margin-top: 20%;">
-                  <button class="btn btn-success col-md-5">Register</button>
-                  <button class="btn btn-primary col-md-5">Login</button>
+                  <router-link class="btn btn-success col-md-5" to="/register">Register</router-link>
+                  <router-link class="btn btn-primary col-md-5" to="/login">Login</router-link>
               </div>
             </div>
           </div>  
@@ -78,20 +78,66 @@ const Home = Vue.component('home', {
 
 const Login = Vue.component('login', {
     template:`
-        <div>
-            <div class="card-header">
-                Login
+      <div>
+        <form id="login-form" @submit.prevent="login">
+            <div class="card-header center login-header">
+              <strong>Login</strong>
             </div>
-            <div class="card center" style="width: 18rem;">
-              <div class="card-body">
-                <label for='usrname' style='font-style: bold;'>Username</label><br>
-                    <input type='text' id='usrname' name='username'/><br>
-                    <label for='passwd' style='font-style: bold;'>Password</label><br>
-                    <input type='password' id='passwd' name='password'/><br>
+            <div class="card center">
+              <div class="card-body login">
+                <div>
+                  <label for='usrname'><strong>Username</strong></label><br>
+                  <input type='text' id='usrname' name='username' style="width: 100%;"/>
+                </div>
+                <div>
+                  <label for='passwd'><strong>Password</strong></label><br>
+                  <input type='password' id='passwd' name='password' style="width: 100%;"/>
+                </div>
+                <div>
+                  <button id="submit" class="btn btn-success">Login</button> 
+                </div>
               </div>
             </div>
-        </div>
-    `
+            <div v-if='messageFlag' >
+              <div class="alert alert-danger center" style="width: 20rem; margin-top: 5%;">
+                {{ message }}
+              </div>
+            </div>
+        </form>
+      </div>
+    `,
+    methods:{
+      login: function(){
+        const self = this
+
+        fetch("api/auth/login",{
+          method: "POST",
+          body: new FormData(document.getElementById('login'))
+        }).then(function(response){
+          return response.json()
+        }).then(function(jsonResponse){
+          self.messageFlag = true;
+
+          if(jsonResponse.status == "success"){
+            localStorage.token = jsonResponse.message
+            router.go();
+            router.push("/")
+          }else{
+            self.message = jsonResponse.message
+          }
+
+        }).catch(function(error){
+          self.messageFlag = false;
+          console.log(error);
+        });
+      }
+    },
+    data: function(){
+      return {
+        messageFlag: false,
+        message: ""
+      }
+    }
 });
 
 // Define Routes
