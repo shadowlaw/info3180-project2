@@ -76,14 +76,31 @@ const Home = Vue.component('home', {
 });
 
 
+const Login = Vue.component('login', {
+    template:`
+        <div>
+            <div class="card-header">
+                Login
+            </div>
+            <div class="card center" style="width: 18rem;">
+              <div class="card-body">
+                <label for='usrname' style='font-style: bold;'>Username</label><br>
+                    <input type='text' id='usrname' name='username'/><br>
+                    <label for='passwd' style='font-style: bold;'>Password</label><br>
+                    <input type='password' id='passwd' name='password'/><br>
+              </div>
+            </div>
+        </div>
+    `
+});
+
 // Define Routes
 const router = new VueRouter({
     routes: [
         { path: "/", component: Home },
-        { path: "/register", component: Register},
-        { path: "/login",},
-        {path: "/logout",},
-        {path: "explore"},
+        // { path: "/register", component: Register},
+        { path: "/login", component: Login},
+        // {path: "explore", componenet: Explore}
         
     ]
 });
