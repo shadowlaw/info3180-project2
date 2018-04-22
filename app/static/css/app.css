@@ -47,14 +47,10 @@ body {
     margin-top:5%;
 }
 
-.card-body div > button{
+.card-body #submit{
     width: 100%;
     height: 80%;
     margin-top: 13%;
-}
-
-.card-body div > label{
-    font-weight:600;
 }
 
 .card{
@@ -62,7 +58,7 @@ body {
     height: 18rem;
 }
 
-.card-header{
+.login-header{
     width: 18rem;
     border: none;
     background: transparent;
