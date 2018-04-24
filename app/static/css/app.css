@@ -37,12 +37,6 @@ body {
 
 
 /*login styling*/
-.login{
-    box-shadow: 0.5px 0.5px 10px grey;
-    border-radius: 2px;
-    padding: 24px
-}
-
 .card-body div{
     margin-top:5%;
 }
@@ -55,7 +49,10 @@ body {
 
 .card{
     width: 20rem;
-    height: 18rem;
+    /*height: 18rem;*/
+    box-shadow: 0.5px 0.5px 10px grey;
+    border-radius: 2px;
+    padding: 24px
 }
 
 .login-header{

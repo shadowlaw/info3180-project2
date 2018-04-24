@@ -96,11 +96,11 @@ const Login = Vue.component('login', {
                 <div>
                   <button id="submit" class="btn btn-success">Login</button> 
                 </div>
-              </div>
-            </div>
-            <div v-if='messageFlag' >
-              <div class="alert alert-danger center" style="width: 20rem; margin-top: 5%;">
-                {{ message }}
+                <div v-if='messageFlag' >
+                  <div class="alert alert-danger center" style="width: 100%; margin-top: 5%;">
+                    {{ message }}
+                  </div>
+                </div>
               </div>
             </div>
         </form>
@@ -118,8 +118,8 @@ const Login = Vue.component('login', {
         }).then(function(jsonResponse){
           self.messageFlag = true;
 
-          if(jsonResponse.status == "success"){
-            localStorage.token = jsonResponse.message
+          if(jsonResponse.hadOwnProperty(token)){
+            localStorage.token = jsonResponse.token
             router.go();
             router.push("/")
           }else{
@@ -140,14 +140,154 @@ const Login = Vue.component('login', {
     }
 });
 
+const Logout = Vue.component("logout", {
+  created: function(){
+    const self = this;
+    
+    fetch("api/auth/logout", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${localStorage.token}`
+      },
+      credentials: "same-origin"
+    }).then(function(response){
+      return response.json();
+    }).then(function(jsonResponse){
+      localStorage.removeItem("token");
+      router.go();
+      router.push("/");
+    }).catch(function(error){
+      console.log(error);
+    });
+  }
+});
+
+
+const NewPost = Vue.component('new-post', {
+  template: `
+    <div class='"card-header">New Post</div>
+    <div class="card" style="width:18rem, margin: 0 auto">
+      <div class="card-body">
+        	<label>Photo</label><br>
+          <label class="btn btn-default" for="photo"><strong>Browse</strong></label><br>
+          <input type = "file" style="display: none;"/>
+          <label>Caption</label><br>
+          <textarea style="width:100%">Write a caption...</textarea>
+          <button class = "btn btn-success" style="width:100%; margin-top: 5%;">Submit</button>
+      </div>    
+    </div>
+  `
+});
+
+const Register=Vue.component("register",{
+  
+    
+  template:`
+        <div>
+        <div v-if='messageFlag' >
+        
+            <div v-if="!errorFlag ">
+                <div class="alert alert-success" >
+                    {{ message }}
+                </div>
+            </div>
+            <div v-else >
+                <ul class="alert alert-danger">
+                    <li v-for="error in message">
+                        {{ error }}
+                    </li>
+                </ul>
+            </div>
+            
+        </div>
+        
+          <div>
+           <h1>Sign Up</h1>
+        <form id="register" @submit.prevent="Register" enctype="multipart/form-data">
+        <div>
+            <label>Firstname:</label><br/>
+            
+           <input type='text' id='firstname' name='firstname' style="width: 100%;"/>
+        </div>
+        <div>
+            <label>Lastname:</label><br/>
+           <input type='text' id='lastname' name='lastname' style="width: 100%;"/>
+        </div>
+        <div>
+            <label>Username:</label><br/>
+           <input type='text' id='username' name='username' style="width: 100%;"/>
+           
+        </div>
+        <div>
+            <label>Password:</label><br/>
+           <input type='password' id='password' name='password' style="width: 100%;"/>
+        </div>
+        <div>
+            <label>Email:</label><br/>
+           <input type='text' id='email' name='email' placeholder="jdoe@example.com" style="width: 100%;"/>
+        </div>
+        <div>
+            <label>Location:</label><br/>
+           <input type='text' id='location' name='location' style="width: 100%;"/>
+        </div>
+        <div>
+            <label>Biography:</label><br/>
+           <textarea name="biography"> </textarea><br/>
+        </div>
+        <div>
+            <label for='profile_photo' class='btn btn-primary'>Browse....</label> <span>{{ filename }}</span>
+            
+            <input id="photo" type="file" name='photo' style="display: none" v-on:change = "onFileSelected" /><br/>
+            
+            <input type="submit" value="Upload" class="btn btn-success"/>
+        </div>
+            
+             <div>
+                  <button id="submit" class="btn btn-success">Sign Up</button> 
+                </div>
+            
+        </form>
+        </div>
+  `,
+   methods: {
+      Register : function(){
+          let self = this;
+          let register = document.getElementById('register');
+          let form_data = new FormData(register);
+          
+          fetch("/api/users/register", {
+              method: "POST",
+              body: form_data,
+              headers: {
+                "Authorization": `Bearer ${localStorage.token}`
+              },
+              credentials: 'same-origin'
+          }).then(function(response){
+              return response.json();
+          }).then(function (jsonResponse) {
+              // display a success message
+              self.messageFlag = true
+              
+              if (jsonResponse.hasOwnProperty("errors")){
+                  self.errorFlag=true;
+                  self.message = jsonResponse.errors;
+              }else if(jsonResponse.hasOwnProperty("message")){
+                  self.errorFlag = false;
+                  self.message = "Profile Successful created";
+              }
+        });
+      }
+   }
+});
+   
 // Define Routes
 const router = new VueRouter({
     routes: [
         { path: "/", component: Home },
-        // { path: "/register", component: Register},
+        { path: "/register", component: Register},
         { path: "/login", component: Login},
-        // {path: "explore", componenet: Explore}
-        
+        {path: "/explore", componenet: NewPost},
+        {path: "/logout", componenet: Logout}
     ]
 });
 
