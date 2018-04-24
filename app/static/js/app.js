@@ -80,7 +80,7 @@ const Login = Vue.component('login', {
     template:`
       <div>
         <form id="login-form" @submit.prevent="login">
-            <div class="card-header center login-header">
+            <div class="card-header center">
               <strong>Login</strong>
             </div>
             <div class="card center">
@@ -165,18 +165,80 @@ const Logout = Vue.component("logout", {
 
 const NewPost = Vue.component('new-post', {
   template: `
-    <div class='"card-header">New Post</div>
-    <div class="card" style="width:18rem, margin: 0 auto">
-      <div class="card-body">
-        	<label>Photo</label><br>
-          <label class="btn btn-default" for="photo"><strong>Browse</strong></label><br>
-          <input type = "file" style="display: none;"/>
-          <label>Caption</label><br>
-          <textarea style="width:100%">Write a caption...</textarea>
-          <button class = "btn btn-success" style="width:100%; margin-top: 5%;">Submit</button>
-      </div>    
+  <div>
+    <div v-if='messageFlag' >
+      <div v-if="errorFlag">
+        <div class="center" style="width: 100%; margin-top: 5%;">
+          <ul class="alert alert-danger">
+            <li v-for="error in message">
+                {{ error }}
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div v-else class="alert alert-success center" style="width: 100%; margin-top: 5%;">
+        {{ message }}
+      </div>
     </div>
-  `
+    
+    <form class="center" id="npostform" @submit.prevent="submit">
+      <div class="card-header center"><strong>New Post</strong></div>
+      <div class="card center">
+        <div class="card-body">
+          	<label><strong>Photo</strong></label><br>
+            <label class="btn" style="border: 0.5px solid black" for="photo"><strong>Browse</strong></label>
+            <label>{{ filename }}</label>
+            <br>
+            <input type = "file" id="photo" style="display: none;" v-on:change="updateFilename"/>
+            <label style="margin-top: 5%"><strong>Caption</strong></label><br>
+            <textarea style="width:100%" placeholder="Write a caption..."></textarea>
+            <button id="submit" class = "btn btn-success">Submit</button>
+        </div>    
+      </div>
+    </form>
+  </div>
+  `,
+  methods: {
+    updateFilename :function(){
+        const self = this
+        let filenameArr = $("#photo")[0].value.split("\\");
+        self.filename = filenameArr[filenameArr.length-1]
+    },
+    submit: function(){
+      self = this;
+      
+      fetch(`/api/users/${JSON.parse(localStorage.user).id}/posts`,{
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.token}`
+        },
+        body: new FormData(document.getElementById("npostform"))
+        
+      }).then(function(response){
+        return response.json();
+      }).then(function(jsonResponse){
+        self.messageFlag = true;
+        
+        if(jsonResponse.hasOwnProperty("message")){
+          self.message = jsonResponse.message
+        }else{
+          self.errorFlag = true;
+          self.message= jsonResponse.errors;
+        }
+      }).catch(function(error){
+        console.log(error);
+      });
+    }
+  },
+  data: function(){
+    return {
+      filename: 'No File Selected',
+      messageFlag: false,
+      errorFlag: false,
+      message: ""
+    }
+  }
+  
 });
 
 const Register=Vue.component("register",{
@@ -286,8 +348,8 @@ const router = new VueRouter({
         { path: "/", component: Home },
         { path: "/register", component: Register},
         { path: "/login", component: Login},
-        {path: "/explore", componenet: NewPost},
-        {path: "/logout", componenet: Logout}
+        // { path: "/explore", component: Explore},
+        {path: "/logout", component: Logout}
     ]
 });
 

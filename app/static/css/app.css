@@ -48,15 +48,15 @@ body {
 }
 
 .card{
-    width: 20rem;
+    width: 25rem;
     /*height: 18rem;*/
     box-shadow: 0.5px 0.5px 10px grey;
     border-radius: 2px;
     padding: 24px
 }
 
-.login-header{
-    width: 18rem;
+.card-header{
+    width: 25rem;
     border: none;
     background: transparent;
     padding-left:0;
