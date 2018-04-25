@@ -6,10 +6,10 @@ This file creates your application.
 """
 
 from app import app, db
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, jsonify
 from werkzeug.security import check_password_hash
-from forms import RegistrationForm
-from models import Users
+from forms import *
+from models import *
 import os, datetime
 import jwt
 from functools import wraps
@@ -35,7 +35,7 @@ def jwt_token(t):
         else:
             try:
                 userdata = jwt.decode(auth, app.config['SECRET_KEY'])
-                currentUser = User.query.filter_by(username = userdata['user']).first()
+                currentUser = Users.query.filter_by(username = userdata['user']).first()
             except jwt.exceptions.InvalidSignatureError:
                 return jsonify({'error':'Invalid Token'})
             except jwt.exceptions.DecodeError:
@@ -86,29 +86,39 @@ def login():
              jwt_token = jwt.encode({'user': user.username},app.config['SECRET_KEY'],algorithm = "HS256")
              response = {'message': 'User successfully logged in','jwt_token':jwt_token}
              return jsonify(response)             
-     return jsonify_errors(form_errors(form))
+     return flash_errors(form.errors(form))
 
 @app.route('/api/auth/logout', methods = ['GET'])
+@jwt_token
+def logout(currentUser):
+    if request.method == 'GET':
+        return jsonify({'message': 'User successfully logged out'})
+    return flash_errors(['Only GET requests are accepted'])
+        
+@app.route('/api/posts', methods = ['GET'])
 
+@app.route('/api/users/{user_id}/posts', methods = ['POST'])
+@app.route('/api/users/{user_id}/posts', methods = ['GET'])
+@app.route('/api/users/{user_id}/follow', methods = ['POST'])
 
 
 # Like Route
 @app.route('/api/posts/<post_id>/like',methods = ['POST'])
 @jwt_token
 def like(currentUser,post_id):
-    post = Post.query.filter_by(post_id).first()
+    post = Posts.query.filter_by(post_id).first()
     
     if not post:
         return jsonify_errors(['post does not exist'])
         
     if request.method == 'POST':
-        like = Like(postid = request.values.get('post_id'),userid = request.values.get('user_id'))
+        like = Likes(post_id = request.values.get('post_id'),user_id = request.values.get('user_id'))
         db.session.add(like)
         db.session.commit()
         
         total_likes = len(Like.query.filter_by(postid = post_id).all())
         return jsonify({'message': 'post liked','likes':total_likes})
-    return jsonify_errors(['Only POST requests are accepted'])
+    return flash_errors(['Only POST requests are accepted'])
     
     
 
