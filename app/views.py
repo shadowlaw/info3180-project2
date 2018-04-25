@@ -84,7 +84,7 @@ def login():
          else:
              user = usersCheck[0]
              jwt_token = jwt.encode({'user': user.username},app.config['SECRET_KEY'],algorithm = "HS256")
-             response = {'message': 'User successfully logged in','jwt_token':jwt_token}
+             response = {'message': 'User successfully logged in','token':jwt_token}
              return jsonify(response)             
      return flash_errors(form.errors(form))
 
@@ -96,6 +96,11 @@ def logout(currentUser):
     return flash_errors(['Only GET requests are accepted'])
         
 @app.route('/api/posts', methods = ['GET'])
+def viewPosts():
+    if request.method == 'GET':
+        allPosts = Posts.query.all()
+        return jsonify({'POSTS':allPosts})
+    return flash_errors(['Only GET requests are accepted'])
 
 @app.route('/api/users/{user_id}/posts', methods = ['POST'])
 @app.route('/api/users/{user_id}/posts', methods = ['GET'])
