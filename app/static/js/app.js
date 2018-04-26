@@ -85,18 +85,18 @@ const Login = Vue.component('login', {
             </div>
             <div class="card center">
               <div class="card-body login">
-                <div>
+                <div style="margin-top:5%;">
                   <label for='usrname'><strong>Username</strong></label><br>
                   <input type='text' id='usrname' name='username' style="width: 100%;"/>
                 </div>
-                <div>
+                <div style="margin-top:5%;">
                   <label for='passwd'><strong>Password</strong></label><br>
                   <input type='password' id='passwd' name='password' style="width: 100%;"/>
                 </div>
-                <div>
+                <div style="margin-top:5%;">
                   <button id="submit" class="btn btn-success">Login</button> 
                 </div>
-                <div v-if='messageFlag' >
+                <div v-if='messageFlag' style="margin-top:5%;">
                   <div class="alert alert-danger center" style="width: 100%; margin-top: 5%;">
                     {{ message }}
                   </div>
@@ -123,7 +123,7 @@ const Login = Vue.component('login', {
             router.go();
             router.push("/")
           }else{
-            self.message = jsonResponse.message
+            self.message = jsonResponse.error
           }
 
         }).catch(function(error){
@@ -145,11 +145,7 @@ const Logout = Vue.component("logout", {
     const self = this;
     
     fetch("api/auth/logout", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${localStorage.token}`
-      },
-      credentials: "same-origin"
+      method: "POST"
     }).then(function(response){
       return response.json();
     }).then(function(jsonResponse){
@@ -341,6 +337,68 @@ const Register=Vue.component("register",{
       }
    }
 });
+/*
+const Explore=Vue.component("explore",{
+  
+  template:``,
+  methods:{
+    fetch("/api/posts",{
+      method: "GET"
+      body:
+      headers:{"Authorization":`Bearer ${localStorage.token}`
+    })
+  }
+  
+})*/
+
+
+const Profile = Vue.component("profile",{
+  template: `
+  <div>
+    <div class="card row" style="width:100%">
+        <div class="card-body row profile-haeder" style="padding: 0;" >
+          <img id="profile_image" class="col-md-2" v-bind:src=user.profile_image style="width: 100%; height: 15%" />
+          <div id="profile_info" class="col-md-7" style="margin-top: 0px;padding-right: 0;">
+            <strong><label>{{ user.firstname }}</label>
+            <label>{{ user.lastname }}</label></strong>
+            <div id="local" style="color: gray;">
+              <label>{{ user.location }}</label><br>
+              <label>{{ user.joined_on }}</label>
+            </div>
+            <p id="bio" style="color: gray;">
+              {{ user.bio }}
+            </p>
+          </div>
+          <div id="follows" class="col-sm-3" style="padding-left:  0; padding-right:  0;">
+            <strong><label id="posts" class="col-md-5">{{ user.postCount }}</label>
+            <label id="followers" class="col-md-5">{{ user.followers }}</label></strong> <br>
+            <label class="col-md-5" style="color: gray; font-weight: 600; font-size: larger;">Posts</label>
+            <label class="col-md-5" style="color: gray; font-weight: 600; font-size: larger;">Followers</label>
+            <label id="follow-btn" class="btn btn-primary" style="width:100%; margin-top: 17%;">Follow</label>
+          </div>
+        </div>
+    </div>
+    
+    <div id="post-area" >
+      
+    </div>
+  </div>
+  `,
+  data: function(){
+    return {
+      user: {
+        firstname: "John",
+        lastname: "Doe",
+        location: "test location",
+        joined_on: "9/9/9999",
+        bio: "i wonder who helel is? :p",
+        postCount: 22,
+        followers: 3,
+        profile_image: "https://www.ienglishstatus.com/wp-content/uploads/2018/04/cute-profile-pics-for-whatsapp-images.png"
+      }
+    }
+  }
+});
    
 // Define Routes
 const router = new VueRouter({
@@ -348,7 +406,7 @@ const router = new VueRouter({
         { path: "/", component: Home },
         { path: "/register", component: Register},
         { path: "/login", component: Login},
-        // { path: "/explore", component: Explore},
+        { path: "/explore", component: Profile},
         {path: "/logout", component: Logout}
     ]
 });

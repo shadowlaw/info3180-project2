@@ -37,10 +37,6 @@ body {
 
 
 /*login styling*/
-.card-body div{
-    margin-top:5%;
-}
-
 .card-body #submit{
     width: 100%;
     height: 80%;
@@ -60,4 +56,8 @@ body {
     border: none;
     background: transparent;
     padding-left:0;
+}
+
+#local{
+    margin-top:3%;
 }
