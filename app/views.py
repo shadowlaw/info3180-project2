@@ -8,11 +8,13 @@ This file creates your application.
 from app import app, db
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from werkzeug.security import check_password_hash
+from werkzeug.utils import secure_filename
 from forms import *
 from models import *
 import os, datetime
 import jwt
 from functools import wraps
+import json
 
 
 ###
@@ -44,30 +46,39 @@ def jwt_token(t):
     return decorated
             
         
-@app.route('/api/users/register')
+@app.route('/api/users/register',methods=["POST"])
 def register():
     form = RegistrationForm()
+    
     if request.method=='POST' and form.validate_on_submit():
-        count = db.session.query(Users).count()
-        uid = 10000 + count
-        uname = form.username.data
-        location=form.location.data
-        bio=form.biography.data
-        lname=form.lastname.data
-        fname=form.firstname.data
-        mail=form.email.data
-        gender=form.gender.data
-        photograph = form.photo.data
-        date = datetime.date.today()
-        filename = str(uid)+".jpg"
-        photograph.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        user = Users(id= uid,first_name=fname, last_name = lname,gender=gender,location=location,bio= bio,email=mail,created_on=date)
-        db.session.add(user)
-        db.session.commit()
-        flash('Profile created!', 'success')
-        return redirect(url_for('profiles'))
-    else:
-        return render_template('profile.html', form = form)
+        
+        try:
+            uname = form.username.data
+            pword = form.password.data
+            location=form.location.data
+            bio=form.biography.data
+            lname=form.lastname.data
+            fname=form.firstname.data
+            mail=form.email.data
+            photo = form.photo.data
+            date = str(datetime.date.today())
+            filename = secure_filename(photo.filename)
+            
+            user = Users(username=uname, password=pword, first_name=fname, last_name=lname, email=mail, location=location, biography=bio, profile_photo=filename, joined_on=date)
+            photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            db.session.add(user)
+            db.session.commit()
+            print "here"
+            return jsonify(message = "User successfully registered")
+            
+            
+        except Exception as e:
+            db.session.rollback()
+            print e
+            return jsonify(errors=["Internal Error"])
+    
+    return jsonify(errors=flash_errors(form))
+    
 
 @app.route('/api/auth/login',methods=["POST"])
 def login():
@@ -101,10 +112,49 @@ def viewPosts():
         allPosts = Posts.query.all()
         return jsonify({'POSTS':allPosts})
     return flash_errors(['Only GET requests are accepted'])
+    
+    
+    
+@app.route('/api/users/<user_id>/posts', methods =['GET','POST'])
+def add_or_return_Posts(user_id):
+    form = UploadForm()
+    if request.method == 'GET':
+        posts = Posts.query.filter_by(user_id = user_id)
+        return toJson(posts)
+    if request.method == 'POST' and form.validate_on_submit:
+        count = db.session.query(Posts).count()
+        u_id = user_id
+        photo = form.image.data
+        filename = secure_filename(photo.filename)
+        captn = form.caption.data
+        create_date = str(datetime.date.today())
+        post = Posts(user_id=u_id,photo=filename,caption=captn ,created_on=create_date)
+        photo.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+        db.session.add(post)
+        db.session.commit()
+        return jsonify(post)
+        
 
-@app.route('/api/users/{user_id}/posts', methods = ['POST'])
-@app.route('/api/users/{user_id}/posts', methods = ['GET'])
-@app.route('/api/users/{user_id}/follow', methods = ['POST'])
+def toJson(itr):
+    itr_list = []
+    for i in itr:
+        itr_list +=[{"user_id":i.user_id , "filename":i.photo , "caption":i.caption, "date":i.created_on}]
+    itr_json = {"posts":itr_list}
+    return jsonify(itr_json)    
+        
+
+
+@app.route('/api/users/<user_id>/follow', methods = ['POST'])
+def follow(user_id):
+    if request.method == 'POST':
+        count = db.session.query(Follows).count()
+        fid = 100 + count
+        u_id = user_id
+        
+        follow = Follows(id=fid,user_id=u_id,follower_id=1)
+        db.session.add(follow)
+        db.session.commit()
+    
 
 
 # Like Route
@@ -114,7 +164,7 @@ def like(currentUser,post_id):
     post = Posts.query.filter_by(post_id).first()
     
     if not post:
-        return jsonify_errors(['post does not exist'])
+        return flash_errors(['post does not exist'])
         
     if request.method == 'POST':
         like = Likes(post_id = request.values.get('post_id'),user_id = request.values.get('user_id'))

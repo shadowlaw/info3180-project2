@@ -293,19 +293,19 @@ const Register=Vue.component("register",{
            <textarea name="biography"> </textarea><br/>
         </div>
         <div>
-            <label for='profile_photo' class='btn btn-primary'>Browse....</label> <span>{{ filename }}</span>
+            <label for='photo' class='btn btn-primary'>Browse....</label> <span>{{ filename }}</span>
             
             <input id="photo" type="file" name='photo' style="display: none" v-on:change = "onFileSelected" /><br/>
             
-            <input type="submit" value="Upload" class="btn btn-success"/>
         </div>
             
              <div>
-                  <button id="submit" class="btn btn-success">Sign Up</button> 
+                  <input type="submit" id="submit" class="btn btn-success" value="Sign Up" /> 
                 </div>
             
         </form>
         </div>
+    </div>
   `,
    methods: {
       Register : function(){
@@ -317,7 +317,7 @@ const Register=Vue.component("register",{
               method: "POST",
               body: form_data,
               headers: {
-                "Authorization": `Bearer ${localStorage.token}`
+              'X-CSRFToken': token
               },
               credentials: 'same-origin'
           }).then(function(response){
@@ -330,11 +330,23 @@ const Register=Vue.component("register",{
                   self.errorFlag=true;
                   self.message = jsonResponse.errors;
               }else if(jsonResponse.hasOwnProperty("message")){
-                  self.errorFlag = false;
-                  self.message = "Profile Successful created";
+                  router.push("/login");
               }
         });
+      },
+      onFileSelected: function(){
+        let self = this
+        let filenameArr = $("#photo")[0].value.split("\\");
+        self.filename = filenameArr[filenameArr.length-1]
       }
+   },
+   data: function(){
+     return {
+        errorFlag: false,
+        messageFlag: false,
+        message: [],
+        filename: "No File Selected"
+    }
    }
 });
 /*
@@ -374,7 +386,7 @@ const Profile = Vue.component("profile",{
             <label id="followers" class="col-md-5">{{ user.followers }}</label></strong> <br>
             <label class="col-md-5" style="color: gray; font-weight: 600; font-size: larger;">Posts</label>
             <label class="col-md-5" style="color: gray; font-weight: 600; font-size: larger;">Followers</label>
-            <label id="follow-btn" class="btn btn-primary" style="width:100%; margin-top: 17%;">Follow</label>
+            <label id="follow-btn" class="btn btn-primary" v-on:click="follow" style="width:100%; margin-top: 17%;">Follow</label>
           </div>
         </div>
     </div>
@@ -386,6 +398,29 @@ const Profile = Vue.component("profile",{
     </div>
   </div>
   `,
+  methods: {
+    follow: function(){
+      self = this;
+      
+      fetch(`/api/users/${self.user.id}/follow`,{
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({"follower_id": self.current_user.id})
+      }).then(function(response){
+        if(resposne.hasOwnProperty("message")){
+          $("#follow-btn")[0].innerHTML="Following";
+          $("#follow-btn").removeClass("btn-primary");
+          $("#follow-btn").addClass("btn-success")
+          ++ self.user.followers;
+        }
+      }).catch(function(error){
+        console.log(error)
+      });
+    }
+  },
   data: function(){
     return {
       user: {
