@@ -379,8 +379,10 @@ const Profile = Vue.component("profile",{
         </div>
     </div>
     
-    <div id="post-area" >
-      
+    <div id="post-area" class="row" style="width:100%;">
+      <div class="profile-post col-md-4" style="margin-top:3%;" v-for="post in user.posts">
+          <img v-bind:src=post.photo style="width: 100%;" />
+      </div>
     </div>
   </div>
   `,
@@ -394,7 +396,44 @@ const Profile = Vue.component("profile",{
         bio: "i wonder who helel is? :p",
         postCount: 22,
         followers: 3,
-        profile_image: "https://www.ienglishstatus.com/wp-content/uploads/2018/04/cute-profile-pics-for-whatsapp-images.png"
+        profile_image: "https://www.ienglishstatus.com/wp-content/uploads/2018/04/cute-profile-pics-for-whatsapp-images.png",
+        posts: [
+            {
+              "id": 1,
+              "user_id": 1,
+              "description": "some-photo.jpg",
+              "photo": "https://i.pinimg.com/originals/09/af/7b/09af7b57dd1e78178ed461af5d1b9d56.jpg",
+              "created_on": "2018-04-03 14:30:00"
+            },
+            {
+              "id": 1,
+              "user_id": 1,
+              "description": "some-photo.jpg",
+              "photo": "https://images.pexels.com/photos/207962/pexels-photo-207962.jpeg?auto=compress&cs=tinysrgb&h=350",
+              "created_on": "2018-04-03 14:30:00"
+            },
+            {
+              "id": 1,
+              "user_id": 1,
+              "description": "some-photo.jpg",
+              "photo": "https://www.google.com/photos/about/static/images/charlie-1.png",
+              "created_on": "2018-04-03 14:30:00"
+            },
+            {
+              "id": 1,
+              "user_id": 1,
+              "photo": "https://images.pexels.com/photos/46710/pexels-photo-46710.jpeg?auto=compress&cs=tinysrgb&h=350",
+              "description": "My Cool photo",
+              "created_on": "2018-04-03 14:30:00"
+            },
+            {
+              "id": 1,
+              "user_id": 1,
+              "photo": "https://images.pexels.com/photos/46710/pexels-photo-46710.jpeg?auto=compress&cs=tinysrgb&h=350",
+              "description": "My Cool photo",
+              "created_on": "2018-04-03 14:30:00"
+            }
+          ]
       }
     }
   }
