@@ -429,7 +429,7 @@ const Profile = Vue.component("profile",{
             <strong><label id="posts" class="col-md-5">{{ user.postCount }}</label>
             <label id="followers" class="col-md-5">{{ user.followers }}</label></strong> <br>
             <label class="col-md-5" style="color: gray; font-weight: 600; font-size: larger;">Posts</label>
-            <label class="col-md-5" style="color: gray; font-weight: 600; font-size: larger;">Followers</label>
+            <label class="col-md-6" style="color: gray; font-weight: 600; font-size: larger;">Followers</label>
             <label id="follow-btn" class="btn btn-primary" v-on:click="follow" style="width:100%; margin-top: 17%;">Follow</label>
           </div>
         </div>
@@ -449,7 +449,7 @@ const Profile = Vue.component("profile",{
       fetch(`/api/users/${self.user.id}/follow`,{
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${localStorage.token}`,
+          "Authorization": `Bearer ${localStorage.current_user.token}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({"follower_id": self.current_user.id})
@@ -465,55 +465,25 @@ const Profile = Vue.component("profile",{
       });
     }
   },
+  created: function(){
+    self = this;
+    
+    fetch(`/api/users/${self.$route.params.user_id}/posts`,{
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${localStorage.current_user.token}`
+      }
+    }).then(function(response){
+      return response.json();
+    }).then(function(jsonResponse){
+      self.user = jsonResponse.post_data;
+    }).catch(function(error){
+      console.log(error);
+    });
+  },
   data: function(){
     return {
-      user: {
-        firstname: "John",
-        lastname: "Doe",
-        location: "test location",
-        joined_on: "9/9/9999",
-        bio: "i wonder who helel is? :p",
-        postCount: 22,
-        followers: 3,
-        profile_image: "https://www.ienglishstatus.com/wp-content/uploads/2018/04/cute-profile-pics-for-whatsapp-images.png",
-        posts: [
-            {
-              "id": 1,
-              "user_id": 1,
-              "description": "some-photo.jpg",
-              "photo": "https://i.pinimg.com/originals/09/af/7b/09af7b57dd1e78178ed461af5d1b9d56.jpg",
-              "created_on": "2018-04-03 14:30:00"
-            },
-            {
-              "id": 1,
-              "user_id": 1,
-              "description": "some-photo.jpg",
-              "photo": "https://images.pexels.com/photos/207962/pexels-photo-207962.jpeg?auto=compress&cs=tinysrgb&h=350",
-              "created_on": "2018-04-03 14:30:00"
-            },
-            {
-              "id": 1,
-              "user_id": 1,
-              "description": "some-photo.jpg",
-              "photo": "https://www.google.com/photos/about/static/images/charlie-1.png",
-              "created_on": "2018-04-03 14:30:00"
-            },
-            {
-              "id": 1,
-              "user_id": 1,
-              "photo": "https://images.pexels.com/photos/46710/pexels-photo-46710.jpeg?auto=compress&cs=tinysrgb&h=350",
-              "description": "My Cool photo",
-              "created_on": "2018-04-03 14:30:00"
-            },
-            {
-              "id": 1,
-              "user_id": 1,
-              "photo": "https://images.pexels.com/photos/46710/pexels-photo-46710.jpeg?auto=compress&cs=tinysrgb&h=350",
-              "description": "My Cool photo",
-              "created_on": "2018-04-03 14:30:00"
-            }
-          ]
-      }
+      user: null
     }
   }
 });

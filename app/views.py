@@ -105,22 +105,42 @@ def login():
 @app.route('/api/auth/logout', methods = ['GET'])
 def logout():
     return jsonify(message= "User successfully logged out.")
+    
         
 @app.route('/api/posts', methods = ['GET'])
 def viewPosts():
-    if request.method == 'GET':
-        allPosts = Posts.query.all()
-        return jsonify({'POSTS':allPosts})
-    return flash_errors(['Only GET requests are accepted'])
+    allPosts = Posts.query.all()
+    posts = []
+    
+    
+    for post in allPosts:
+        user = Users.query.filter_by(id=post.user_id).first()
+        postObj = {"id": post.id, "user_id": post.user_id, "username": user.username, "user_profile_photo": url_for('static', filename='uploads/'+user.profile_photo),"photo": post.photo, "caption": post.caption, "created_on": post.created_on, "likes": post.likes}
+        posts.append(postObj)
+        
+    return jsonify(posts=posts)
     
     
     
 @app.route('/api/users/<user_id>/posts', methods =['GET','POST'])
-def add_or_return_Posts(user_id):
+def posts(user_id):
+    
     form = UploadForm()
+    
     if request.method == 'GET':
-        posts = Posts.query.filter_by(user_id = user_id)
-        return toJson(posts)
+        posts = Posts.query.filter_by(user_id = user_id).all()
+        user_id = posts[0].user_id
+        
+        user = Users.query.filter_by(id=user_id).first()
+        user_follower_count = len(Follows.query.filter_by(user_id=user.id).all())
+        response = {"status": "ok", "post_data":{"firstname":user.first_name, "lastname": user.last_name, "location": user.location, "joined_on": user.joined_on, "bio": user.biography, "postCount": len(posts), "followers": user_follower_count, "profile_image": url_for('static', filename='uploads/'+user.profile_photo), "posts":[]}}
+        
+        for post in posts:
+            postObj = {"id":post.id, "user_id": post.user_id, "photo": url_for('static', filename='uploads/'+post.photo), "caption": post.caption, "created_on": post.created_on, "likes": post.likes}
+            response["post_data"]["posts"].append(postObj)
+        
+        return jsonify(response)
+        
     if request.method == 'POST' and form.validate_on_submit:
         count = db.session.query(Posts).count()
         u_id = user_id
@@ -134,15 +154,6 @@ def add_or_return_Posts(user_id):
         db.session.commit()
         return jsonify(post)
         
-
-def toJson(itr):
-    itr_list = []
-    for i in itr:
-        itr_list +=[{"user_id":i.user_id , "filename":i.photo , "caption":i.caption, "date":i.created_on}]
-    itr_json = {"posts":itr_list}
-    return jsonify(itr_json)    
-        
-
 
 @app.route('/api/users/<user_id>/follow', methods = ['POST'])
 def follow(user_id):
