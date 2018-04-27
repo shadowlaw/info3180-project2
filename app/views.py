@@ -65,7 +65,7 @@ def register():
             filename = secure_filename(photo.filename)
             
             user = Users(username=uname, password=pword, first_name=fname, last_name=lname, email=mail, location=location, biography=bio, profile_photo=filename, joined_on=date)
-            photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            photo.save(os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'], filename))
             db.session.add(user)
             db.session.commit()
             print "here"
@@ -115,7 +115,7 @@ def viewPosts():
     
     for post in allPosts:
         user = Users.query.filter_by(id=post.user_id).first()
-        postObj = {"id": post.id, "user_id": post.user_id, "username": user.username, "user_profile_photo": url_for('static', filename='uploads/'+user.profile_photo),"photo": post.photo, "caption": post.caption, "created_on": post.created_on, "likes": post.likes}
+        postObj = {"id": post.id, "user_id": post.user_id, "username": user.username, "user_profile_photo": os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'],user.profile_photo),"photo": os.path.join(app.config['POST_IMG_UPLOAD_FOLDER'],post.photo), "caption": post.caption, "created_on": post.created_on, "likes": post.likes}
         posts.append(postObj)
         
     return jsonify(posts=posts)
@@ -133,10 +133,10 @@ def posts(user_id):
         
         user = Users.query.filter_by(id=user_id).first()
         user_follower_count = len(Follows.query.filter_by(user_id=user.id).all())
-        response = {"status": "ok", "post_data":{"firstname":user.first_name, "lastname": user.last_name, "location": user.location, "joined_on": user.joined_on, "bio": user.biography, "postCount": len(posts), "followers": user_follower_count, "profile_image": url_for('static', filename='uploads/'+user.profile_photo), "posts":[]}}
+        response = {"status": "ok", "post_data":{"firstname":user.first_name, "lastname": user.last_name, "location": user.location, "joined_on": "Member since "+format_date(user.joined_on), "bio": user.biography, "postCount": len(posts), "followers": user_follower_count, "profile_image": os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'],user.profile_photo), "posts":[]}}
         
         for post in posts:
-            postObj = {"id":post.id, "user_id": post.user_id, "photo": url_for('static', filename='uploads/'+post.photo), "caption": post.caption, "created_on": post.created_on, "likes": post.likes}
+            postObj = {"id":post.id, "user_id": post.user_id, "photo": os.path.join(app.config['POST_IMG_UPLOAD_FOLDER'], post.photo), "caption": post.caption, "created_on": post.created_on, "likes": post.likes}
             response["post_data"]["posts"].append(postObj)
         
         return jsonify(response)
@@ -184,7 +184,8 @@ def like(currentUser,post_id):
         return jsonify({'message': 'post liked','likes':total_likes})
     return flash_errors(['Only POST requests are accepted'])
     
-    
+def format_date(date):
+    return datetime.date(int(date.split('-')[0]),int(date.split('-')[1]),int(date.split('-')[2])).strftime("%B %Y")
 
 # Flash errors from the form if validation fails
 def flash_errors(form):

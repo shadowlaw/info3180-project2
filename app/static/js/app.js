@@ -219,7 +219,7 @@ const NewPost = Vue.component('new-post', {
       fetch(`/api/users/${JSON.parse(localStorage.user).id}/posts`,{
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${localStorage.token}`
+          "Authorization": `Bearer ${JSON.parse(localStorage.current_user).token}`
         },
         body: new FormData(document.getElementById("npostform")),
         headers: {
@@ -430,7 +430,12 @@ const Profile = Vue.component("profile",{
             <label id="followers" class="col-md-5">{{ user.followers }}</label></strong> <br>
             <label class="col-md-5" style="color: gray; font-weight: 600; font-size: larger;">Posts</label>
             <label class="col-md-6" style="color: gray; font-weight: 600; font-size: larger;">Followers</label>
-            <label id="follow-btn" class="btn btn-primary" v-on:click="follow" style="width:100%; margin-top: 17%;">Follow</label>
+            <div v-if="cu_id">
+              <label id="new-post-btn" class="btn btn-success" style="width:100%; margin-top: 17%;">New Post</label>
+            </div>
+            <div v-else>
+              <label id="follow-btn" class="btn btn-primary" v-on:click="follow" style="width:100%; margin-top: 17%;">Follow</label>
+            </div>
           </div>
         </div>
     </div>
@@ -449,7 +454,7 @@ const Profile = Vue.component("profile",{
       fetch(`/api/users/${self.user.id}/follow`,{
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${localStorage.current_user.token}`,
+          "Authorization": `Bearer ${JSON.parse(localStorage.current_user).token}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({"follower_id": self.current_user.id})
@@ -471,7 +476,7 @@ const Profile = Vue.component("profile",{
     fetch(`/api/users/${self.$route.params.user_id}/posts`,{
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${localStorage.current_user.token}`
+        "Authorization": `Bearer ${JSON.parse(localStorage.current_user).token}`
       }
     }).then(function(response){
       return response.json();
@@ -483,7 +488,8 @@ const Profile = Vue.component("profile",{
   },
   data: function(){
     return {
-      user: null
+      user: null,
+      cu_id: (this.$route.params.user_id == JSON.parse(localStorage.current_user).id) ? true : false
     }
   }
 });

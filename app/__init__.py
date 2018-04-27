@@ -3,6 +3,7 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_wtf.csrf import CSRFProtect
+import os
 
 app = Flask(__name__)
 csrf = CSRFProtect(app)
@@ -13,6 +14,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://app_api:password@localhost
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True  # added just to suppress a warning
 
 UPLOAD_FOLDER ='./app/static/uploads'
+PROFILE_IMG_UPLOAD_FOLDER = os.path.join("static/uploads", "profile_photos")
+POST_IMG_UPLOAD_FOLDER = os.path.join("static/uploads", "posts")
 
 db = SQLAlchemy(app)
 
