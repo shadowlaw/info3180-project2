@@ -31,7 +31,7 @@ class Users(db.Model):
     
     def __init__(self, username, password, first_name, last_name, email, location, biography, profile_photo, joined_on):
         self.username = username
-        self.password = password
+        self.password = generate_password_hash(password)
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
@@ -39,9 +39,6 @@ class Users(db.Model):
         self.biography = biography
         self.profile_photo = profile_photo
         self.joined_on = joined_on
-    
-    def set_password(self, password):
-        self.password = generate_password_hash(password)
     
 
 class Likes(db.Model):

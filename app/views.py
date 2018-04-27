@@ -82,22 +82,25 @@ def register():
 
 @app.route('/api/auth/login',methods=["POST"])
 def login():
-     form = LoginForm()
-     if request.method == "POST" and form.validate_on_submit():
-         username = form.username.data
-         password = form.password.data
-         usersCheck = Users.query.filter_by(username=username).all()
-         
-         if len(usersCheck) == 0:
-             return jsonify({'error': 'Invalid username or password'})
-         elif not check_password_hash(usersCheck[0].password,password):
-             return jsonify({'error': 'Invalid username or password'})
-         else:
-             user = usersCheck[0]
-             jwt_token = jwt.encode({'user': user.username},app.config['SECRET_KEY'],algorithm = "HS256")
-             response = {'message': 'User successfully logged in','token':jwt_token}
-             return jsonify(response)             
-     return flash_errors(form.errors(form))
+    form = LoginForm()
+    
+    if request.method == "POST" and form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        
+        user = Users.query.filter_by(username=username).first()
+        
+        if user != None and check_password_hash(user.password, password):
+            payload = {'user': user.username}
+            jwt_token = jwt.encode(payload,app.config['SECRET_KEY'],algorithm = "HS256")
+            response = {'message': 'User successfully logged in','token':jwt_token, "user_id": user.id}
+            
+            return jsonify(response)
+            
+        return jsonify(errors=["Username or password is incorrect"])
+    
+    return jsonify(errors=flash_errors(form))
+
 
 @app.route('/api/auth/logout', methods = ['GET'])
 @jwt_token
@@ -147,11 +150,9 @@ def toJson(itr):
 @app.route('/api/users/<user_id>/follow', methods = ['POST'])
 def follow(user_id):
     if request.method == 'POST':
-        count = db.session.query(Follows).count()
-        fid = 100 + count
         u_id = user_id
         
-        follow = Follows(id=fid,user_id=u_id,follower_id=1)
+        follow = Follows(user_id=u_id,follower_id=1)
         db.session.add(follow)
         db.session.commit()
     

@@ -21,7 +21,7 @@ Vue.component('app-header', {
               <router-link class="nav-link" to="/explore">Explore</router-link>
             </li>
             <li class="nav-item active">
-              <router-link class="nav-link" to="#">My Profile</router-link>
+              <router-link class="nav-link" :to="{name: 'users', params: {user_id: cu_id}}">My Profile</router-link>
             </li>
             <li v-if="auth" class="nav-item active">
               <router-link class="nav-link" to="/logout">Logout</router-link>
@@ -34,7 +34,8 @@ Vue.component('app-header', {
     `,
     data: function(){
         return {
-            auth: localStorage.hasOwnProperty("token")
+            auth: localStorage.hasOwnProperty("current_user"),
+            cu_id: localStorage.hasOwnProperty("current_user") ? JSON.parse(localStorage.current_user).id : null
         }
     }
 });
@@ -86,12 +87,12 @@ const Login = Vue.component('login', {
             <div class="card center">
               <div class="card-body login">
                 <div style="margin-top:5%;">
-                  <label for='usrname'><strong>Username</strong></label><br>
-                  <input type='text' id='usrname' name='username' style="width: 100%;"/>
+                  <label for='username'><strong>Username</strong></label><br>
+                  <input type='text' id='username' name='username' style="width: 100%;"/>
                 </div>
                 <div style="margin-top:5%;">
-                  <label for='passwd'><strong>Password</strong></label><br>
-                  <input type='password' id='passwd' name='password' style="width: 100%;"/>
+                  <label for='password'><strong>Password</strong></label><br>
+                  <input type='password' id='password' name='password' style="width: 100%;"/>
                 </div>
                 <div style="margin-top:5%;">
                   <button id="submit" class="btn btn-success">Login</button> 
@@ -109,17 +110,26 @@ const Login = Vue.component('login', {
     methods:{
       login: function(){
         const self = this
-
-        fetch("api/auth/login",{
+        
+        let login_data = document.getElementById('login-form');
+        let login_form = new FormData(login_data);
+        
+        fetch("/api/auth/login",{
           method: "POST",
-          body: new FormData(document.getElementById('login'))
+          body: login_form,
+          headers: {
+          'X-CSRFToken': token
+          },
+          credentials: 'same-origin'
         }).then(function(response){
-          return response.json()
+          return response.json();
         }).then(function(jsonResponse){
           self.messageFlag = true;
-
-          if(jsonResponse.hadOwnProperty(token)){
-            localStorage.token = jsonResponse.token
+          
+          if(jsonResponse.hasOwnProperty("token")){
+            cuser={"token":jsonResponse.token, id: jsonResponse.user_id};
+            localStorage.current_user = JSON.stringify(cuser);
+            
             router.go();
             router.push("/")
           }else{
@@ -208,7 +218,11 @@ const NewPost = Vue.component('new-post', {
         headers: {
           "Authorization": `Bearer ${localStorage.token}`
         },
-        body: new FormData(document.getElementById("npostform"))
+        body: new FormData(document.getElementById("npostform")),
+        headers: {
+        'X-CSRFToken': token
+        },
+        credentials: 'same-origin'
         
       }).then(function(response){
         return response.json();
@@ -352,11 +366,38 @@ const Register=Vue.component("register",{
 /*
 const Explore=Vue.component("explore",{
   
-  template:``,
+  template:`<ul id="post">
+  <div v-for="post in posts class="card" style="width: 18rem;>
+  <div class="card-header"></div>
+  <img class="card-img-top" src="user.photo" alt="user photo">
+  <div class="card-body">
+    <p class="card-text">{{user.post.text}}</p>
+      <div class="card-footer" style="text-align:right">{{user.post.date}}</div>
+      <div class="card-footer" style="text-align: left">{{user.post.likes}}</div>
+    
+  </div>
+</div>
+  </div>
+ </ul>`,
+ created() {
+    this.property = 'Example property update.'
+    console.log('propertyComputed will update, as this.property is now reactive.')
+  }
+}
   methods:{
     fetch("/api/posts",{
       method: "GET"
-      body:
+          credentials: 'same-origin'
+          }).then(function(response){
+              return response.json();
+          }).then(function (jsonResponse) {
+              // display a success message
+              self.messageFlag = true
+              if (jsonResponse.hasOwnProperty("errors")){
+                  self.errorFlag=true;
+                  self.message = jsonResponse.errors;
+              }else if(jsonResponse.hasOwnProperty("message"))
+      
       headers:{"Authorization":`Bearer ${localStorage.token}`
     })
   }
@@ -480,7 +521,9 @@ const router = new VueRouter({
         { path: "/", component: Home },
         { path: "/register", component: Register},
         { path: "/login", component: Login},
-        { path: "/explore", component: Profile},
+        // { path: "/explore", component: Explore},
+        {path: "/users/:user_id", name:"users",component: Profile},
+        {path: "/posts/new", component: NewPost},
         {path: "/logout", component: Logout}
     ]
 });
