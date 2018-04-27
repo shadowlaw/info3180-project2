@@ -133,7 +133,7 @@ const Login = Vue.component('login', {
             router.go();
             router.push("/")
           }else{
-            self.message = jsonResponse.error
+            self.message = jsonResponse.errors
           }
 
         }).catch(function(error){
@@ -151,15 +151,18 @@ const Login = Vue.component('login', {
 });
 
 const Logout = Vue.component("logout", {
+  template: `
+  <div>
+  <div/>`,
   created: function(){
     const self = this;
     
     fetch("api/auth/logout", {
-      method: "POST"
+      method: "GET"
     }).then(function(response){
       return response.json();
     }).then(function(jsonResponse){
-      localStorage.removeItem("token");
+      localStorage.removeItem("current_user");
       router.go();
       router.push("/");
     }).catch(function(error){

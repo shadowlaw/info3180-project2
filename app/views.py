@@ -97,17 +97,14 @@ def login():
             
             return jsonify(response)
             
-        return jsonify(errors=["Username or password is incorrect"])
+        return jsonify(errors="Username or password is incorrect")
     
     return jsonify(errors=flash_errors(form))
 
 
 @app.route('/api/auth/logout', methods = ['GET'])
-@jwt_token
-def logout(currentUser):
-    if request.method == 'GET':
-        return jsonify({'message': 'User successfully logged out'})
-    return flash_errors(['Only GET requests are accepted'])
+def logout():
+    return jsonify(message= "User successfully logged out.")
         
 @app.route('/api/posts', methods = ['GET'])
 def viewPosts():
