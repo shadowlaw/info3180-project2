@@ -65,7 +65,7 @@ def register():
             filename = secure_filename(photo.filename)
             
             user = Users(username=uname, password=pword, first_name=fname, last_name=lname, email=mail, location=location, biography=bio, profile_photo=filename, joined_on=date)
-            photo.save(os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'], filename))
+            photo.save(os.path.join("./app",app.config['PROFILE_IMG_UPLOAD_FOLDER'], filename))
             db.session.add(user)
             db.session.commit()
             print "here"
@@ -125,8 +125,6 @@ def viewPosts():
 @app.route('/api/users/<user_id>/posts', methods =['GET','POST'])
 def posts(user_id):
     
-    form = UploadForm()
-    
     if request.method == 'GET':
         posts = Posts.query.filter_by(user_id = user_id).all()
         user_id = posts[0].user_id
@@ -140,30 +138,38 @@ def posts(user_id):
             response["post_data"]["posts"].append(postObj)
         
         return jsonify(response)
+    
+    
+    if request.method == 'POST':
         
-    if request.method == 'POST' and form.validate_on_submit:
-        count = db.session.query(Posts).count()
-        u_id = user_id
-        photo = form.image.data
-        filename = secure_filename(photo.filename)
-        captn = form.caption.data
-        create_date = str(datetime.date.today())
-        post = Posts(user_id=u_id,photo=filename,caption=captn ,created_on=create_date)
-        photo.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
-        db.session.add(post)
-        db.session.commit()
-        return jsonify(post)
+        form = PostForm()
+        
+        if form.validate_on_submit:
+            
+            u_id = form.user_id.data
+            photo = form.photo.data
+            captn = form.caption.data
+            
+            filename = secure_filename(photo.filename)
+            
+            create_date = str(datetime.date.today())
+            post = Posts(user_id=u_id,photo=filename,caption=captn ,created_on=create_date)
+            photo.save(os.path.join("./app", app.config['POST_IMG_UPLOAD_FOLDER'],filename))
+            db.session.add(post)
+            db.session.commit()
+            return jsonify(message="Post Created")
         
 
 @app.route('/api/users/<user_id>/follow', methods = ['POST'])
 def follow(user_id):
-    if request.method == 'POST':
-        u_id = user_id
-        
-        follow = Follows(user_id=u_id,follower_id=1)
-        db.session.add(follow)
-        db.session.commit()
     
+    request_payload = request.get_json()
+    
+    follow = Follows(user_id = request_payload['user_id'], follower_id = request_payload['follower_id'])
+    db.session.add(follow)
+    db.session.commit()
+    
+    return jsonify(status = 201, message="operation successful")
 
 
 # Like Route

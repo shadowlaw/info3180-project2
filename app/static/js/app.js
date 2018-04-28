@@ -195,10 +195,11 @@ const NewPost = Vue.component('new-post', {
       <div class="card center">
         <div class="card-body">
           	<label><strong>Photo</strong></label><br>
+          	<input id="user_id" name="user_id" v-bind:value="cu_id" style="display: none;"/>
             <label class="btn" style="border: 0.5px solid black" for="photo"><strong>Browse</strong></label>
             <label>{{ filename }}</label>
             <br>
-            <input type = "file" id="photo" style="display: none;" v-on:change="updateFilename"/>
+            <input type = "file" id="photo" name="photo" style="display: none;" v-on:change="updateFilename"/>
             <label style="margin-top: 5%"><strong>Caption</strong></label><br>
             <textarea style="width:100%" placeholder="Write a caption..."></textarea>
             <button id="submit" class = "btn btn-success">Submit</button>
@@ -216,7 +217,7 @@ const NewPost = Vue.component('new-post', {
     submit: function(){
       self = this;
       
-      fetch(`/api/users/${JSON.parse(localStorage.user).id}/posts`,{
+      fetch(`/api/users/${JSON.parse(localStorage.current_user).id}/posts`,{
         method: "POST",
         headers: {
           "Authorization": `Bearer ${JSON.parse(localStorage.current_user).token}`
@@ -233,7 +234,8 @@ const NewPost = Vue.component('new-post', {
         self.messageFlag = true;
         
         if(jsonResponse.hasOwnProperty("message")){
-          self.message = jsonResponse.message
+          router.go()
+          router.push(`/users/${self.cu_id}`)
         }else{
           self.errorFlag = true;
           self.message= jsonResponse.errors;
@@ -248,7 +250,8 @@ const NewPost = Vue.component('new-post', {
       filename: 'No File Selected',
       messageFlag: false,
       errorFlag: false,
-      message: ""
+      message: "",
+      cu_id: JSON.parse(localStorage.current_user).id
     }
   }
   
@@ -431,7 +434,7 @@ const Profile = Vue.component("profile",{
             <label class="col-md-5" style="color: gray; font-weight: 600; font-size: larger;">Posts</label>
             <label class="col-md-6" style="color: gray; font-weight: 600; font-size: larger;">Followers</label>
             <div v-if="cu_id">
-              <label id="new-post-btn" class="btn btn-success" style="width:100%; margin-top: 17%;">New Post</label>
+              <router-link id="new-post-btn" to="/posts/new" class="btn btn-success" style="width:100%; margin-top: 17%;">New Post</router-link>
             </div>
             <div v-else>
               <label id="follow-btn" class="btn btn-primary" v-on:click="follow" style="width:100%; margin-top: 17%;">Follow</label>
@@ -451,20 +454,26 @@ const Profile = Vue.component("profile",{
     follow: function(){
       self = this;
       
-      fetch(`/api/users/${self.user.id}/follow`,{
+      fetch(`/api/users/${self.$route.params.user_id}/follow`,{
         method: "POST",
         headers: {
           "Authorization": `Bearer ${JSON.parse(localStorage.current_user).token}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          'X-CSRFToken': token
         },
-        body: JSON.stringify({"follower_id": self.current_user.id})
+        credentials: 'same-origin',
+        body: JSON.stringify({"follower_id": JSON.parse(localStorage.current_user).id, "user_id": self.$route.params.user_id})
       }).then(function(response){
-        if(resposne.hasOwnProperty("message")){
+        return response.json();
+      }).then(function(jsonResponse){
+        
+        if(jsonResponse.hasOwnProperty("message")){
           $("#follow-btn")[0].innerHTML="Following";
           $("#follow-btn").removeClass("btn-primary");
           $("#follow-btn").addClass("btn-success")
           ++ self.user.followers;
         }
+        
       }).catch(function(error){
         console.log(error)
       });

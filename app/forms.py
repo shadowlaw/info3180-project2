@@ -19,8 +19,9 @@ class RegistrationForm(FlaskForm):
     biography = TextAreaField('Biography',validators=[InputRequired()])
     photo= FileField('Profile Photo',validators=[FileRequired(),FileAllowed(['jpg', 'png'], 'Images only!')])
     
-class UploadForm(FlaskForm):
-    image = FileField('Profile Picture', validators=[FileRequired(), FileAllowed(['jpg','png'],'Image only!')])
+class PostForm(FlaskForm):
+    user_id = StringField("", validators=[InputRequired()])
+    photo = FileField('Profile Picture', validators=[FileRequired(), FileAllowed(['jpg','png'],'Image only!')])
     caption = TextAreaField('Caption', validators=[InputRequired()])    
     
     
