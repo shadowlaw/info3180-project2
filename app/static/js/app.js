@@ -131,7 +131,7 @@ const Login = Vue.component('login', {
             localStorage.current_user = JSON.stringify(cuser);
             
             router.go();
-            router.push("/")
+            router.push("/explore")
           }else{
             self.message = jsonResponse.errors
           }
@@ -201,7 +201,7 @@ const NewPost = Vue.component('new-post', {
             <br>
             <input type = "file" id="photo" name="photo" style="display: none;" v-on:change="updateFilename"/>
             <label style="margin-top: 5%"><strong>Caption</strong></label><br>
-            <textarea style="width:100%" placeholder="Write a caption..."></textarea>
+            <textarea id="caption" name="caption" style="width:100%" placeholder="Write a caption..."></textarea>
             <button id="submit" class = "btn btn-success">Submit</button>
         </div>    
       </div>
@@ -369,46 +369,107 @@ const Register=Vue.component("register",{
     }
    }
 });
-/*
-const Explore=Vue.component("explore",{
-  
-  template:`<ul id="post">
-  <div v-for="post in posts class="card" style="width: 18rem;>
-  <div class="card-header"></div>
-  <img class="card-img-top" src="user.photo" alt="user photo">
-  <div class="card-body">
-    <p class="card-text">{{user.post.text}}</p>
-      <div class="card-footer" style="text-align:right">{{user.post.date}}</div>
-      <div class="card-footer" style="text-align: left">{{user.post.likes}}</div>
-    
-  </div>
-</div>
-  </div>
- </ul>`,
- created() {
-    this.property = 'Example property update.'
-    console.log('propertyComputed will update, as this.property is now reactive.')
-  }
-}
-  methods:{
-    fetch("/api/posts",{
-      method: "GET"
-          credentials: 'same-origin'
-          }).then(function(response){
-              return response.json();
-          }).then(function (jsonResponse) {
-              // display a success message
-              self.messageFlag = true
-              if (jsonResponse.hasOwnProperty("errors")){
-                  self.errorFlag=true;
-                  self.message = jsonResponse.errors;
-              }else if(jsonResponse.hasOwnProperty("message"))
+
+const Explore = Vue.component("explore", {
+  template:`
+    <div class="row">
+      <div v-if="postFlag" >
+        <div class="alert alert-primary" >
+          We Couldnt find any posts Anywhere. Be the first user to post on our site.
+        </div>
+      </div>
+      <div v-else class="col-md-7" style="margin: 0 auto;">
+        <div class="card" style=" width:100%; padding: 0; margin-bottom: 5%" v-for="(post, index) in posts">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <img id="pro-photo" v-bind:src=post.user_profile_photo style="width:40px"/>
+              <router-link class="username" :to="{name: 'users', params: {user_id: post.user_id}}">{{ post.username }}</router-link>
+            </li>
+            <li class="list-group-item" style="padding: 0;">
+              <img id="post-img" v-bind:src=post.photo style="width:100%" />
+            </li>
+            <li class="list-group-item text-muted">
+              {{ post.caption }}
+              <div class="row" style="margin-top: 10%">
+                <div id="likes" class="col-md-6" style="text-align: left;">
+                  <img class="like-ico liked" src="static/icons/liked.png"  v-on:click="like" style="width:20px; display: none;"/>
+                  <img class="like-ico like" src="static/icons/like.png"  v-on:click="like" style="width:20px;"/> {{post.likes}} Likes
+                  
+                  <input type="hidden" id="post-id"  v-bind:value="post.id" />
+                  <input type="hidden" id="post-index" v-bind:value="index" />
+                </div>
+                <div id="post-date" class="col-md-6" style="text-align: right">
+                  {{post.created_on}}
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
       
-      headers:{"Authorization":`Bearer ${localStorage.token}`
-    })
+      <div class="col-md-3">
+        	<router-link class="btn btn-primary" to="/posts/new" style="width:100%;">New Post</router-link>
+      </div>
+    </div>
+  `,
+  created: function(){
+    self = this;
+    
+    fetch("/api/posts", {
+      method: "GET",
+      headers:{
+        "Authorization": `Bearer ${JSON.parse(localStorage.current_user).token}`,
+        'X-CSRFToken': token
+      },
+      credentials: 'same-origin'
+    }).then(function(response){
+      return response.json();
+    }).then(function(jsonResponse){
+      self.posts = jsonResponse.posts;
+      self.postFlag = false;
+    }).catch(function(error){
+      console.log(error);
+    });
+  },
+  methods: {
+    like: function(event){
+      self = this;
+      let node_list = event.target.parentElement.children;
+      let post_id = node_list[node_list.length-2].value;
+      let post_index = node_list[node_list.length-1].value;
+      
+      fetch(`/api/posts/${post_id}/like`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${JSON.parse(localStorage.current_user).token}`,
+          'X-CSRFToken': token,
+          'Content-Type': 'application/json'
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({"user_id": JSON.parse(localStorage.current_user).id, "post_id": post_id})
+      }).then(function(response){
+        return response.json();
+      }).then(function(jsonResponse){
+        
+        if(jsonResponse.hasOwnProperty("status")){
+          if(jsonResponse.status == 201){
+            event.target.style.display="none"
+            event.target.previousElementSibling.style.display="";
+            self.posts[post_index].likes = jsonResponse.likes;
+          }
+        }
+      }).catch(function(error){
+        console.log(error);
+      });
+    }
+  },
+  data: function(){
+    return {
+      posts: [],
+      postFlag: true
+    }
   }
-  
-})*/
+});
 
 
 const Profile = Vue.component("profile",{
@@ -433,12 +494,7 @@ const Profile = Vue.component("profile",{
             <label id="followers" class="col-md-5">{{ user.followers }}</label></strong> <br>
             <label class="col-md-5" style="color: gray; font-weight: 600; font-size: larger;">Posts</label>
             <label class="col-md-6" style="color: gray; font-weight: 600; font-size: larger;">Followers</label>
-            <div v-if="cu_id">
-              <router-link id="new-post-btn" to="/posts/new" class="btn btn-success" style="width:100%; margin-top: 17%;">New Post</router-link>
-            </div>
-            <div v-else>
-              <label id="follow-btn" class="btn btn-primary" v-on:click="follow" style="width:100%; margin-top: 17%;">Follow</label>
-            </div>
+            <label id="follow-btn" class="btn btn-primary" v-on:click="follow" style="width:100%; margin-top: 17%;">Follow</label>
           </div>
         </div>
     </div>
@@ -509,7 +565,7 @@ const router = new VueRouter({
         { path: "/", component: Home },
         { path: "/register", component: Register},
         { path: "/login", component: Login},
-        // { path: "/explore", component: Explore},
+        { path: "/explore", component: Explore},
         {path: "/users/:user_id", name:"users",component: Profile},
         {path: "/posts/new", component: NewPost},
         {path: "/logout", component: Logout}

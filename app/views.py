@@ -115,7 +115,9 @@ def viewPosts():
     
     for post in allPosts:
         user = Users.query.filter_by(id=post.user_id).first()
-        postObj = {"id": post.id, "user_id": post.user_id, "username": user.username, "user_profile_photo": os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'],user.profile_photo),"photo": os.path.join(app.config['POST_IMG_UPLOAD_FOLDER'],post.photo), "caption": post.caption, "created_on": post.created_on}
+        print user is None
+        likeCount = len(Likes.query.filter_by(post_id=post.id).all())
+        postObj = {"id": post.id, "user_id": post.user_id, "username": user.username, "user_profile_photo": os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'],user.profile_photo),"photo": os.path.join(app.config['POST_IMG_UPLOAD_FOLDER'],post.photo), "caption": post.caption, "created_on": strf_time(post.created_on, "%d %B %Y"), "likes": likeCount}
         posts.append(postObj)
         
     return jsonify(posts=posts)
@@ -130,7 +132,7 @@ def posts(user_id):
         
         user = Users.query.filter_by(id=user_id).first()
         user_follower_count = len(Follows.query.filter_by(user_id=user.id).all())
-        response = {"status": "ok", "post_data":{"firstname":user.first_name, "lastname": user.last_name, "location": user.location, "joined_on": "Member since "+format_date(user.joined_on), "bio": user.biography, "postCount": len(posts), "followers": user_follower_count, "profile_image": os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'],user.profile_photo), "posts":[]}}
+        response = {"status": "ok", "post_data":{"firstname":user.first_name, "lastname": user.last_name, "location": user.location, "joined_on": "Member since "+strf_time(user.joined_on, "%B %Y"), "bio": user.biography, "postCount": len(posts), "followers": user_follower_count, "profile_image": os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'],user.profile_photo), "posts":[]}}
         
         for post in posts:
             postObj = {"id":post.id, "user_id": post.user_id, "photo": os.path.join(app.config['POST_IMG_UPLOAD_FOLDER'], post.photo), "caption": post.caption, "created_on": post.created_on}
@@ -180,29 +182,34 @@ def follow(user_id):
 
 # Like Route
 @app.route('/api/posts/<post_id>/like',methods = ['POST'])
-@jwt_token
 def like(post_id):
     
     request_payload = request.get_json()
     user_id = request_payload["user_id"]
     post_id = request_payload["post_id"]
     
-    post = Posts.query.filter_by(post_id=post_id).first()
+    post = Posts.query.filter_by(id=post_id).first()
+    Postlikes = Likes.query.filter_by(post_id=post_id).all()
     
     if post is None:
-        return jsonify(staus=200, message="Post does not exist")
+        return jsonify(staus="", message="Post does not exist")
         
-    like = Likes(post_id = post_id, user_id = user_id)
+    if Postlikes is not None:
+        for like in Postlikes:
+            if like.user_id == user_id:
+                return jsonify(status=200, message="already liked")
+        
+    NewLike = Likes(post_id = post_id, user_id = user_id)
     
-    db.session.add(like)
+    db.session.add(NewLike)
     db.session.commit()
     
-    total_likes = len(Likes.query.filter_by(postid = post_id).all())
-    return jsonify({'message': 'post liked','likes':total_likes})
+    total_likes = len(Likes.query.filter_by(post_id=post_id).all())
+    return jsonify({"status":201,'message': 'post liked','likes':total_likes})
 
 
-def format_date(date):
-    return datetime.date(int(date.split('-')[0]),int(date.split('-')[1]),int(date.split('-')[2])).strftime("%B %Y")
+def strf_time(date, dateFormat):
+    return datetime.date(int(date.split('-')[0]),int(date.split('-')[1]),int(date.split('-')[2])).strftime(dateFormat)
 
 # Flash errors from the form if validation fails
 def flash_errors(form):

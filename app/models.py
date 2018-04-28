@@ -44,8 +44,8 @@ class Users(db.Model):
 
 class Likes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, unique=True)
-    post_id = db.Column(db.Integer, unique=True)
+    user_id = db.Column(db.Integer)
+    post_id = db.Column(db.Integer)
     
     def __init__(self,post_id,user_id):
         self.user_id = user_id
@@ -55,8 +55,8 @@ class Likes(db.Model):
     
 class Follows(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, unique=True)
-    follower_id = db.Column(db.Integer, unique=True)
+    user_id = db.Column(db.Integer)
+    follower_id = db.Column(db.Integer)
     
     def __init__(self,user_id, follower_id):
         self.user_id = user_id

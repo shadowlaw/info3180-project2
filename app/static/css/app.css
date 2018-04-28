@@ -65,3 +65,14 @@ body {
 #local{
     margin-top:3%;
 }
+
+.username{
+    color: black;
+    font-size: inherit;
+    text-decoration: none;
+}
+
+.username:active, .username:hover{
+    color: black;
+    text-decoration: none;
+}
