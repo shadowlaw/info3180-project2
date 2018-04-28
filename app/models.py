@@ -8,7 +8,7 @@ class Posts(db.Model):
     photo = db.Column(db.String(255))
     caption = db.Column(db.String(255))
     created_on = db.Column(db.String(80))
-    likes = db.Column(db.Integer)
+
     
     def __init__(self,user_id,photo,caption,created_on):
         #self.id = id

@@ -62,7 +62,7 @@ def register():
             mail=form.email.data
             photo = form.photo.data
             date = str(datetime.date.today())
-            filename = secure_filename(photo.filename)
+            filename = uname+secure_filename(photo.filename)
             
             user = Users(username=uname, password=pword, first_name=fname, last_name=lname, email=mail, location=location, biography=bio, profile_photo=filename, joined_on=date)
             photo.save(os.path.join("./app",app.config['PROFILE_IMG_UPLOAD_FOLDER'], filename))
@@ -115,7 +115,7 @@ def viewPosts():
     
     for post in allPosts:
         user = Users.query.filter_by(id=post.user_id).first()
-        postObj = {"id": post.id, "user_id": post.user_id, "username": user.username, "user_profile_photo": os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'],user.profile_photo),"photo": os.path.join(app.config['POST_IMG_UPLOAD_FOLDER'],post.photo), "caption": post.caption, "created_on": post.created_on, "likes": post.likes}
+        postObj = {"id": post.id, "user_id": post.user_id, "username": user.username, "user_profile_photo": os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'],user.profile_photo),"photo": os.path.join(app.config['POST_IMG_UPLOAD_FOLDER'],post.photo), "caption": post.caption, "created_on": post.created_on}
         posts.append(postObj)
         
     return jsonify(posts=posts)
@@ -127,14 +127,13 @@ def posts(user_id):
     
     if request.method == 'GET':
         posts = Posts.query.filter_by(user_id = user_id).all()
-        user_id = posts[0].user_id
         
         user = Users.query.filter_by(id=user_id).first()
         user_follower_count = len(Follows.query.filter_by(user_id=user.id).all())
         response = {"status": "ok", "post_data":{"firstname":user.first_name, "lastname": user.last_name, "location": user.location, "joined_on": "Member since "+format_date(user.joined_on), "bio": user.biography, "postCount": len(posts), "followers": user_follower_count, "profile_image": os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'],user.profile_photo), "posts":[]}}
         
         for post in posts:
-            postObj = {"id":post.id, "user_id": post.user_id, "photo": os.path.join(app.config['POST_IMG_UPLOAD_FOLDER'], post.photo), "caption": post.caption, "created_on": post.created_on, "likes": post.likes}
+            postObj = {"id":post.id, "user_id": post.user_id, "photo": os.path.join(app.config['POST_IMG_UPLOAD_FOLDER'], post.photo), "caption": post.caption, "created_on": post.created_on}
             response["post_data"]["posts"].append(postObj)
         
         return jsonify(response)
@@ -150,7 +149,9 @@ def posts(user_id):
             photo = form.photo.data
             captn = form.caption.data
             
-            filename = secure_filename(photo.filename)
+            user = Users.query.filter_by(id=u_id).first()
+            
+            filename = user.username+secure_filename(photo.filename)
             
             create_date = str(datetime.date.today())
             post = Posts(user_id=u_id,photo=filename,caption=captn ,created_on=create_date)
@@ -165,31 +166,41 @@ def follow(user_id):
     
     request_payload = request.get_json()
     
+    result = Follows.query.filter_by(user_id = request_payload['user_id'], follower_id = request_payload['follower_id']).first()
+    
+    if result!= None:
+        return jsonify(status = 200, message="Unable to complete operation ")
+    
     follow = Follows(user_id = request_payload['user_id'], follower_id = request_payload['follower_id'])
     db.session.add(follow)
     db.session.commit()
     
-    return jsonify(status = 201, message="operation successful")
+    return jsonify(status = 201, message="Operation successful")
 
 
 # Like Route
 @app.route('/api/posts/<post_id>/like',methods = ['POST'])
 @jwt_token
-def like(currentUser,post_id):
-    post = Posts.query.filter_by(post_id).first()
+def like(post_id):
     
-    if not post:
-        return flash_errors(['post does not exist'])
-        
-    if request.method == 'POST':
-        like = Likes(post_id = request.values.get('post_id'),user_id = request.values.get('user_id'))
-        db.session.add(like)
-        db.session.commit()
-        
-        total_likes = len(Like.query.filter_by(postid = post_id).all())
-        return jsonify({'message': 'post liked','likes':total_likes})
-    return flash_errors(['Only POST requests are accepted'])
+    request_payload = request.get_json()
+    user_id = request_payload["user_id"]
+    post_id = request_payload["post_id"]
     
+    post = Posts.query.filter_by(post_id=post_id).first()
+    
+    if post is None:
+        return jsonify(staus=200, message="Post does not exist")
+        
+    like = Likes(post_id = post_id, user_id = user_id)
+    
+    db.session.add(like)
+    db.session.commit()
+    
+    total_likes = len(Likes.query.filter_by(postid = post_id).all())
+    return jsonify({'message': 'post liked','likes':total_likes})
+
+
 def format_date(date):
     return datetime.date(int(date.split('-')[0]),int(date.split('-')[1]),int(date.split('-')[2])).strftime("%B %Y")
 

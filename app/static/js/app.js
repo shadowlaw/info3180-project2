@@ -467,7 +467,7 @@ const Profile = Vue.component("profile",{
         return response.json();
       }).then(function(jsonResponse){
         
-        if(jsonResponse.hasOwnProperty("message")){
+        if(jsonResponse.hasOwnProperty("message") && jsonResponse.status==201 ){
           $("#follow-btn")[0].innerHTML="Following";
           $("#follow-btn").removeClass("btn-primary");
           $("#follow-btn").addClass("btn-success")
