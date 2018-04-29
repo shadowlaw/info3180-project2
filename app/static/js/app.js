@@ -235,7 +235,7 @@ const NewPost = Vue.component('new-post', {
         
         if(jsonResponse.hasOwnProperty("status")){
          if(jsonResponse.status == 201){
-            self.errorFlag = true;
+            self.errorFlag = false;
             self.message = jsonResponse.message
           }else{
             self.errorFlag = true;
