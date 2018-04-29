@@ -232,7 +232,7 @@ def form_errors(form):
     
     for field, errors in form.errors.items():
         for error in errors:
-            errorArr.append("{0} - {1}".format(field,error))
+            errorArr.append(error)
             
     return errorArr
 
