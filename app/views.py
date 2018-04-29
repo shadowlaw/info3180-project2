@@ -6,7 +6,7 @@ This file creates your application.
 """
 
 from app import app, db
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, jsonify
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 from forms import *
@@ -52,11 +52,6 @@ def token_authenticate(t):
     return decorated
     
 
-@app.route("/token-test-route", methods=["GET", "POST"])
-@token_authenticate
-def test_route():
-    return "success"
-
 @app.route('/api/users/register',methods=["POST"])
 def register():
     form = RegistrationForm()
@@ -88,7 +83,7 @@ def register():
             print e
             return jsonify(errors=["Internal Error"])
     
-    return jsonify(errors=flash_errors(form))
+    return jsonify(errors=form_errors(form))
     
 
 @app.route('/api/auth/login',methods=["POST"])
@@ -110,7 +105,7 @@ def login():
             
         return jsonify(errors="Username or password is incorrect")
     
-    return jsonify(errors=flash_errors(form))
+    return jsonify(errors=form_errors(form))
 
 
 @app.route('/api/auth/logout', methods = ['GET'])
@@ -159,7 +154,7 @@ def posts(user_id):
         
         form = PostForm()
         
-        if form.validate_on_submit:
+        if form.validate_on_submit():
             
             u_id = form.user_id.data
             photo = form.photo.data
@@ -174,8 +169,11 @@ def posts(user_id):
             photo.save(os.path.join("./app", app.config['POST_IMG_UPLOAD_FOLDER'],filename))
             db.session.add(post)
             db.session.commit()
-            return jsonify(message="Post Created")
-        
+            return jsonify(status=201, message="Post Created")
+            
+            
+        print form.errors.items()
+        return jsonify(status=200, errors=form_errors(form))
 
 @app.route('/api/users/<user_id>/follow', methods = ['POST'])
 @token_authenticate
@@ -227,15 +225,16 @@ def like(post_id):
 def strf_time(date, dateFormat):
     return datetime.date(int(date.split('-')[0]),int(date.split('-')[1]),int(date.split('-')[2])).strftime(dateFormat)
 
-# Flash errors from the form if validation fails
-def flash_errors(form):
+# errors from the form if validation fails
+def form_errors(form):
+    
+    errorArr = []
+    
     for field, errors in form.errors.items():
         for error in errors:
-            flash(u"Error in the %s field - %s" % (
-                getattr(form, field).label.text,
-                error
-            ), 'danger')
-
+            errorArr.append("{0} - {1}".format(field,error))
+            
+    return errorArr
 
 @app.after_request
 def add_header(response):

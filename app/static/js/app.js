@@ -175,21 +175,6 @@ const Logout = Vue.component("logout", {
 const NewPost = Vue.component('new-post', {
   template: `
   <div>
-    <div v-if='messageFlag' >
-      <div v-if="errorFlag">
-        <div class="center" style="width: 100%; margin-top: 5%;">
-          <ul class="alert alert-danger">
-            <li v-for="error in message">
-                {{ error }}
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div v-else class="alert alert-success center" style="width: 100%; margin-top: 5%;">
-        {{ message }}
-      </div>
-    </div>
-    
     <form class="center" id="npostform" @submit.prevent="submit">
       <div class="card-header center"><strong>New Post</strong></div>
       <div class="card center">
@@ -203,6 +188,21 @@ const NewPost = Vue.component('new-post', {
             <label style="margin-top: 5%"><strong>Caption</strong></label><br>
             <textarea id="caption" name="caption" style="width:100%" placeholder="Write a caption..."></textarea>
             <button id="submit" class = "btn btn-success">Submit</button>
+            
+            <div v-if='messageFlag' >
+              <div v-if="errorFlag">
+                <div style="width: 100%; margin-top: 5%;">
+                  <ul class="alert alert-danger">
+                    <li v-for="error in message">
+                        {{ error }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div v-else class="alert alert-success" style="width: 100%; margin-top: 5%;">
+                {{ message }}
+              </div>
+            </div>
         </div>    
       </div>
     </form>
@@ -231,12 +231,13 @@ const NewPost = Vue.component('new-post', {
       }).then(function(jsonResponse){
         self.messageFlag = true;
         
-        if(jsonResponse.hasOwnProperty("message")){
-          router.go()
-          router.push(`/users/${self.cu_id}`)
-        }else{
-          self.errorFlag = true;
-          self.message= jsonResponse.errors;
+        if(jsonResponse.hasOwnProperty("status")){
+         if(jsonResponse.status == 201){
+            self.message = jsonResponse.message
+          }else{
+            self.errorFlag = true;
+            self.message= jsonResponse.errors;
+          } 
         }
       }).catch(function(error){
         console.log(error);
@@ -260,69 +261,69 @@ const Register=Vue.component("register",{
     
   template:`
         <div>
-        <div v-if='messageFlag' >
-        
-            <div v-if="!errorFlag ">
-                <div class="alert alert-success" >
-                    {{ message }}
-                </div>
-            </div>
-            <div v-else >
-                <ul class="alert alert-danger">
-                    <li v-for="error in message">
-                        {{ error }}
-                    </li>
-                </ul>
-            </div>
-            
-        </div>
           
           <h3 class="card-header center text-muted">Register</h3>
           <div class="card center">
            
-        <form id="register" @submit.prevent="Register" enctype="multipart/form-data">
-        <div>
-            <label>Firstname:</label><br/>
+            <form id="register" @submit.prevent="Register" enctype="multipart/form-data">
+            <div>
+                <label>Firstname:</label><br/>
+                
+               <input type='text' id='firstname' name='firstname' style="width: 100%;"/>
+            </div>
+            <div>
+                <label>Lastname:</label><br/>
+               <input type='text' id='lastname' name='lastname' style="width: 100%;"/>
+            </div>
+            <div>
+                <label>Username:</label><br/>
+               <input type='text' id='username' name='username' style="width: 100%;"/>
+               
+            </div>
+            <div>
+                <label>Password:</label><br/>
+               <input type='password' id='password' name='password' style="width: 100%;"/>
+            </div>
+            <div>
+                <label>Email:</label><br/>
+               <input type='text' id='email' name='email' placeholder="jdoe@example.com" style="width: 100%;"/>
+            </div>
+            <div>
+                <label>Location:</label><br/>
+               <input type='text' id='location' name='location' style="width: 100%;"/>
+            </div>
+            <div>
+                <label>Biography:</label><br/>
+               <textarea name="biography" rows="3" style="width:100%"> </textarea><br/>
+            </div>
+            <div>
+                <label for='photo' class='btn btn-primary'>Browse....</label> <span>{{ filename }}</span>
+                
+                <input id="photo" type="file" name='photo' style="display: none" v-on:change = "onFileSelected" /><br/>
+                
+            </div>
+                
+                 <div>
+                      <input type="submit" id="submit" class="btn btn-success" value="Sign Up" /> 
+                    </div>
+                
+            </form>
+            <div v-if='messageFlag' style="margin-top: 5%;">
             
-           <input type='text' id='firstname' name='firstname' style="width: 100%;"/>
-        </div>
-        <div>
-            <label>Lastname:</label><br/>
-           <input type='text' id='lastname' name='lastname' style="width: 100%;"/>
-        </div>
-        <div>
-            <label>Username:</label><br/>
-           <input type='text' id='username' name='username' style="width: 100%;"/>
-           
-        </div>
-        <div>
-            <label>Password:</label><br/>
-           <input type='password' id='password' name='password' style="width: 100%;"/>
-        </div>
-        <div>
-            <label>Email:</label><br/>
-           <input type='text' id='email' name='email' placeholder="jdoe@example.com" style="width: 100%;"/>
-        </div>
-        <div>
-            <label>Location:</label><br/>
-           <input type='text' id='location' name='location' style="width: 100%;"/>
-        </div>
-        <div>
-            <label>Biography:</label><br/>
-           <textarea name="biography" rows="3" style="width:100%"> </textarea><br/>
-        </div>
-        <div>
-            <label for='photo' class='btn btn-primary'>Browse....</label> <span>{{ filename }}</span>
-            
-            <input id="photo" type="file" name='photo' style="display: none" v-on:change = "onFileSelected" /><br/>
-            
-        </div>
-            
-             <div>
-                  <input type="submit" id="submit" class="btn btn-success" value="Sign Up" /> 
+                <div v-if="!errorFlag ">
+                    <div class="alert alert-success" >
+                        {{ message }}
+                    </div>
                 </div>
-            
-        </form>
+                <div v-else >
+                    <ul class="alert alert-danger">
+                        <li v-for="error in message">
+                            {{ error }}
+                        </li>
+                    </ul>
+                </div>
+                
+            </div>
         </div>
     </div>
   `,
@@ -424,7 +425,7 @@ const Explore = Vue.component("explore", {
     }).then(function(response){
       return response.json();
     }).then(function(jsonResponse){
-      self.posts = jsonResponse.posts;
+      self.posts = jsonResponse.posts.reverse();
       self.postFlag = false;
     }).catch(function(error){
       console.log(error);
