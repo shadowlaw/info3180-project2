@@ -216,6 +216,8 @@ const NewPost = Vue.component('new-post', {
     },
     submit: function(){
       self = this;
+      self.messageFlag = true;
+      self.message = "Sending Post......";
       
       fetch(`/api/users/${JSON.parse(localStorage.current_user).id}/posts`,{
         method: "POST",
@@ -229,7 +231,7 @@ const NewPost = Vue.component('new-post', {
       }).then(function(response){
         return response.json();
       }).then(function(jsonResponse){
-        self.messageFlag = true;
+        
         
         if(jsonResponse.hasOwnProperty("status")){
          if(jsonResponse.status == 201){
@@ -240,6 +242,7 @@ const NewPost = Vue.component('new-post', {
           } 
         }
       }).catch(function(error){
+        self.message = "Unexpected Error"
         console.log(error);
       });
     }
@@ -566,9 +569,9 @@ const router = new VueRouter({
         { path: "/register", component: Register},
         { path: "/login", component: Login},
         { path: "/explore", component: Explore},
-        {path: "/users/:user_id", name:"users",component: Profile},
-        {path: "/posts/new", component: NewPost},
-        {path: "/logout", component: Logout}
+        { path: "/users/:user_id", name:"users",component: Profile},
+        { path: "/posts/new", component: NewPost},
+        { path: "/logout", component: Logout}
     ]
 });
 
