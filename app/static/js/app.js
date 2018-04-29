@@ -430,8 +430,12 @@ const Explore = Vue.component("explore", {
     }).then(function(response){
       return response.json();
     }).then(function(jsonResponse){
-      self.posts = jsonResponse.posts.reverse();
-      self.postFlag = true;
+      if(jsonResponse.hasOwnProperty("posts")){
+        if(jsonResponse.posts.length !=0){
+          self.posts = jsonResponse.posts.reverse();
+          self.postFlag = true;
+        }
+      }
     }).catch(function(error){
       console.log(error);
     });
