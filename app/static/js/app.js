@@ -220,12 +220,10 @@ const NewPost = Vue.component('new-post', {
       fetch(`/api/users/${JSON.parse(localStorage.current_user).id}/posts`,{
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${JSON.parse(localStorage.current_user).token}`
+          "Authorization": `Bearer ${JSON.parse(localStorage.current_user).token}`,
+          'X-CSRFToken': token
         },
         body: new FormData(document.getElementById("npostform")),
-        headers: {
-        'X-CSRFToken': token
-        },
         credentials: 'same-origin'
         
       }).then(function(response){
@@ -278,9 +276,10 @@ const Register=Vue.component("register",{
             </div>
             
         </div>
-        
-          <div>
-           <h1>Sign Up</h1>
+          
+          <h3 class="card-header center text-muted">Register</h3>
+          <div class="card center">
+           
         <form id="register" @submit.prevent="Register" enctype="multipart/form-data">
         <div>
             <label>Firstname:</label><br/>
@@ -310,7 +309,7 @@ const Register=Vue.component("register",{
         </div>
         <div>
             <label>Biography:</label><br/>
-           <textarea name="biography"> </textarea><br/>
+           <textarea name="biography" rows="3" style="width:100%"> </textarea><br/>
         </div>
         <div>
             <label for='photo' class='btn btn-primary'>Browse....</label> <span>{{ filename }}</span>

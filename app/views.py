@@ -14,7 +14,6 @@ from models import *
 import os, datetime
 import jwt
 from functools import wraps
-import json
 
 
 ###
@@ -27,25 +26,37 @@ def home():
     """Render website's home page."""
     return render_template('index.html')
     
-    
-def jwt_token(t):
+def token_authenticate(t):
     @wraps(t)
     def decorated(*args, **kwargs):
+        
         auth = request.headers.get('Authorization', None)
+        
         if not auth:
             return jsonify({'error': 'Access Denied : No Token Found'}), 401
         else:
             try:
-                userdata = jwt.decode(auth, app.config['SECRET_KEY'])
+                userdata = jwt.decode(auth.split(" ")[1], app.config['SECRET_KEY'])
                 currentUser = Users.query.filter_by(username = userdata['user']).first()
-            except jwt.exceptions.InvalidSignatureError:
+                
+                if currentUser is None:
+                    return jsonify({'error': 'Access Denied'}), 401
+                
+            except jwt.exceptions.InvalidSignatureError as e:
+                print e
                 return jsonify({'error':'Invalid Token'})
-            except jwt.exceptions.DecodeError:
+            except jwt.exceptions.DecodeError as e:
+                print e
                 return jsonify({'error': 'Invalid Token'})
-            return t(currentUser,*args, **kwargs)
+            return t(*args, **kwargs)
     return decorated
-            
-        
+    
+
+@app.route("/token-test-route", methods=["GET", "POST"])
+@token_authenticate
+def test_route():
+    return "success"
+
 @app.route('/api/users/register',methods=["POST"])
 def register():
     form = RegistrationForm()
@@ -68,7 +79,7 @@ def register():
             photo.save(os.path.join("./app",app.config['PROFILE_IMG_UPLOAD_FOLDER'], filename))
             db.session.add(user)
             db.session.commit()
-            print "here"
+            
             return jsonify(message = "User successfully registered")
             
             
@@ -103,11 +114,13 @@ def login():
 
 
 @app.route('/api/auth/logout', methods = ['GET'])
+@token_authenticate
 def logout():
     return jsonify(message= "User successfully logged out.")
     
         
 @app.route('/api/posts', methods = ['GET'])
+@token_authenticate
 def viewPosts():
     allPosts = Posts.query.all()
     posts = []
@@ -115,7 +128,7 @@ def viewPosts():
     
     for post in allPosts:
         user = Users.query.filter_by(id=post.user_id).first()
-        print user is None
+
         likeCount = len(Likes.query.filter_by(post_id=post.id).all())
         postObj = {"id": post.id, "user_id": post.user_id, "username": user.username, "user_profile_photo": os.path.join(app.config['PROFILE_IMG_UPLOAD_FOLDER'],user.profile_photo),"photo": os.path.join(app.config['POST_IMG_UPLOAD_FOLDER'],post.photo), "caption": post.caption, "created_on": strf_time(post.created_on, "%d %B %Y"), "likes": likeCount}
         posts.append(postObj)
@@ -125,6 +138,7 @@ def viewPosts():
     
     
 @app.route('/api/users/<user_id>/posts', methods =['GET','POST'])
+@token_authenticate
 def posts(user_id):
     
     if request.method == 'GET':
@@ -164,6 +178,7 @@ def posts(user_id):
         
 
 @app.route('/api/users/<user_id>/follow', methods = ['POST'])
+@token_authenticate
 def follow(user_id):
     
     request_payload = request.get_json()
@@ -182,6 +197,7 @@ def follow(user_id):
 
 # Like Route
 @app.route('/api/posts/<post_id>/like',methods = ['POST'])
+@token_authenticate
 def like(post_id):
     
     request_payload = request.get_json()
