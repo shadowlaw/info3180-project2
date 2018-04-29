@@ -235,6 +235,7 @@ const NewPost = Vue.component('new-post', {
         
         if(jsonResponse.hasOwnProperty("status")){
          if(jsonResponse.status == 201){
+            self.errorFlag = true;
             self.message = jsonResponse.message
           }else{
             self.errorFlag = true;
@@ -376,12 +377,8 @@ const Register=Vue.component("register",{
 const Explore = Vue.component("explore", {
   template:`
     <div class="row">
-      <div v-if="postFlag" >
-        <div class="alert alert-primary" >
-          We Couldnt find any posts Anywhere. Be the first user to post on our site.
-        </div>
-      </div>
-      <div v-else class="col-md-7" style="margin: 0 auto;">
+      
+      <div v-if="postFlag" class="col-md-7" style="margin: 0 auto;">
         <div class="card" style=" width:100%; padding: 0; margin-bottom: 5%" v-for="(post, index) in posts">
           <ul class="list-group list-group-flush">
             <li class="list-group-item">
@@ -409,7 +406,12 @@ const Explore = Vue.component("explore", {
           </ul>
         </div>
       </div>
-      
+      <div v-else>
+        <div class="alert alert-primary" >
+          We Couldnt find any posts Anywhere. Be the first user to post on our site.
+        </div>
+      </div>
+        
       <div class="col-md-3">
         	<router-link class="btn btn-primary" to="/posts/new" style="width:100%;">New Post</router-link>
       </div>
@@ -429,7 +431,7 @@ const Explore = Vue.component("explore", {
       return response.json();
     }).then(function(jsonResponse){
       self.posts = jsonResponse.posts.reverse();
-      self.postFlag = false;
+      self.postFlag = true;
     }).catch(function(error){
       console.log(error);
     });
@@ -469,7 +471,7 @@ const Explore = Vue.component("explore", {
   data: function(){
     return {
       posts: [],
-      postFlag: true
+      postFlag: false
     }
   }
 });
